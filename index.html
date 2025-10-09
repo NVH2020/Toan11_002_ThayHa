@@ -177,9 +177,9 @@ const db = getFirestore(app);
 const EXAM_CODE = "Toan11_002";
 const QUIZ_ID = "toanthayha_11";
 const TIME_LIMIT_SECONDS = 60 * 60; // thời gian làm bài (giây). chỉnh ở đây
-const ATTEMPT_LIMIT = 2;            // giới hạn số lần làm bài mỗi SBD
-const START_TIME = "2025-10-08T20:00:00"; // thời gian mở
-const DEADLINE = "2025-10-15T23:00:00";   // thời gian đóng
+const ATTEMPT_LIMIT = 3;            // giới hạn số lần làm bài mỗi SBD
+const START_TIME = "2025-10-09T20:00:00"; // thời gian mở
+const DEADLINE = "2025-10-18T23:00:00";   // thời gian đóng
 
 // ====== DOM ======
 const examCodeDisplay = document.getElementById("examCodeDisplay");
@@ -795,6 +795,41 @@ const questionNavPanel = document.getElementById("questionNavPanel");
 // === khi đóng trang dọn dẹp ===
 window.addEventListener('beforeunload', () => {
     if (timerInterval) clearInterval(timerInterval);
+});
+// ====== Tự động lấy thông tin học sinh từ Google Sheet ======
+const studentIdInput = document.getElementById("studentId");
+const fullnameInput = document.getElementById("fullname");
+const classNameInput = document.getElementById("className");
+
+const API_URL = "https://script.google.com/macros/s/AKfycbw4ozAD8KBScUPnN6NogxWQG052n0Ai6uZ29gwS3pxtCP8eRp0LmADfqSl7mTcHJVR0/exec"; // đổi link này thành link web app bạn deploy
+
+studentIdInput.addEventListener("blur", async () => {
+    const id = studentIdInput.value.trim();
+    if (!id) return;
+
+    try {
+        const res = await fetch(`${API_URL}?id=${id}`);
+        const data = await res.json();
+
+        if (data && data.studentId) {
+            fullnameInput.value = data.fullname || "";
+            classNameInput.value = data.className || "";
+            schoolSelect.value = data.school || "";
+            schoolInput.value = data.school || "";
+
+            if (!schoolSelect.querySelector(`option[value="${data.school}"]`)) {
+                schoolSelect.value = "Khác";
+                schoolInput.classList.remove("hidden");
+            } else {
+                schoolInput.classList.add("hidden");
+            }
+        } else {
+            alert("❌ Không tìm thấy số báo danh này trong danh sách.");
+        }
+    } catch (err) {
+        console.error("Lỗi lấy dữ liệu:", err);
+        alert("Lỗi kết nối tới Google Sheet. Vui lòng thử lại.");
+    }
 });
 </script>
 </body>
